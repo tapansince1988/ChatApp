@@ -32,10 +32,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
-        username = text_data_json["username"]
+        # username = text_data_json["username"]
         data = json.loads(text_data)
         message_type = data.get('type', 'text')
-        # message = data.get('message')
+        username = data.get('username', 'Unknown')
 
         if message_type == 'video':
             await self.channel_layer.group_send(
@@ -43,7 +43,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     'type': 'chat_message',
                     'message': message,
-                    'message_type': 'video'
+                    'message_type': 'video',
+                    'username': username,
                 }
             )
         else:

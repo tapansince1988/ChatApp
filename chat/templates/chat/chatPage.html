@@ -114,6 +114,11 @@
             const formData = new FormData();
             formData.append('video', file);
 
+            // Add the username to the form data
+            formData.append('username', "{{request.user.username}}");
+            const usr = "{{request.user.username}}";
+            console.log(usr);
+
             fetch('/upload_video/', {
                 method: 'POST',
                 body: formData,
@@ -128,7 +133,7 @@
                     chatSocket.send(JSON.stringify({
                         'message': data.video_url,
                         'type': 'video',
-                        'username' : "{{request.user.username}}"
+                        'username' : usr
                     }));
                     document.getElementById('videoInput').value = '';
                 } else {
@@ -154,7 +159,9 @@
         const messageType = data.message_type;
         const message = data.message;
         if (messageType === 'video') {
+          const username = data.username || "Unknown";
           console.log(data);
+          console.log("username : " + username);
           var div = document.createElement("div");
 
           // Create <video> element
