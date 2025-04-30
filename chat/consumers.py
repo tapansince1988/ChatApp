@@ -19,17 +19,40 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name 
         )
 
+    async def chat_message(self , event):
+        message = event['message']
+        message_type = event.get('message_type', 'text')
+
+        await self.send(text_data=json.dumps({
+            'message': message,
+            'message_type': message_type,
+        }))
 
     async def receive(self, text_data):
+
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
         username = text_data_json["username"]
-        await self.channel_layer.group_send(
-            self.roomGroupName,{
-                "type" : "sendMessage" ,
-                "message" : message , 
-                "username" : username ,
-            })
+        data = json.loads(text_data)
+        message_type = data.get('type', 'text')
+        # message = data.get('message')
+
+        if message_type == 'video':
+            await self.channel_layer.group_send(
+                self.roomGroupName,
+                {
+                    'type': 'chat_message',
+                    'message': message,
+                    'message_type': 'video'
+                }
+            )
+        else:
+            await self.channel_layer.group_send(
+                self.roomGroupName,{
+                    "type" : "sendMessage" ,
+                    "message" : message , 
+                    "username" : username ,
+                })
         
         
     async def sendMessage(self , event) : 
