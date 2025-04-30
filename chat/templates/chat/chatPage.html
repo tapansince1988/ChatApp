@@ -5,33 +5,60 @@
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <title>Chat Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+  
   </head>
   <body>
-    <center><h1>Hello , Welcome to my chat site ! {{request.user}}</h1></center>
-    <br>
-    {% if request.user.is_authenticated  %}
-    <center> Leave the chat site ?  
+
+    <!-- Header Start -->
+    <div class="container-fluid bg-dark px-0">
+      <div class="d-flex justify-content-between align-items-center px-5 py-3">
+        <div class="m-0 display-6 text-white">
+          Hello, Welcome to my chat site! {{ request.user }}
+        </div>
+        {% if request.user.is_authenticated %}
         <form method="post" action="{% url 'logout-user' %}">
-            {% csrf_token %}
-            <button type="submit">logout</button>
+          {% csrf_token %}
+          <button class="btn btn-danger px-5" type="submit">Logout</button>
         </form>
-    </center>
-    {% endif %}
-    <div
-      class="chat__item__container"
-      id="id_chat_item_container"
-      style="font-size: 20px"
-    >
-      <br />
-      <input type="text" id="id_message_send_input" />
-      <button type="submit" id="id_message_send_button">Send Message</button>
-      <br />
-      Want to share a video ? Click on the button.
-      <input type="file" id="videoInput" accept="video/*" style="display: none;">
-      <button id="shareVideoBtn">Share Video</button>
-      <br />
-      <br />
-      <br />
+        {% endif %}
+      </div>
+    </div>
+    <!-- Header End -->
+
+    <div class="container my-4">
+      <div class="row g-4">
+        <!-- Chat Message Box (Left Column) -->
+        <div class="col-md-6">
+          <div class="p-4 border rounded" style="font-size: 20px;">
+            <!-- Centered Text Input -->
+            <div class="text-center">
+              <input type="text" id="id_message_send_input" 
+                     class="form-control mb-3 d-inline-block" 
+                     placeholder="Type your message..." 
+                     style="height: 40px; width: 80%; font-size: 20px;" />
+            </div>
+            <!-- Centered Send Button -->
+            <div class="text-center">
+              <button type="submit" id="id_message_send_button" class="btn btn-primary px-4">Send Message</button>
+            </div>
+          </div>
+        </div>
+    
+        <!-- Video Share Box (Right Column) -->
+        <div class="col-md-6">
+          <div class="p-4 border rounded text-center" style="font-size: 24px;">
+            <input type="file" id="videoInput" accept="video/*" style="display: none;">
+            <div class="mb-3">Want to share a video? Click on the button.</div>
+            <button id="shareVideoBtn" class="btn btn-secondary">Share Video</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container my-4 p-4 border rounded chat__item__container overflow-auto" id="id_chat_item_container" style="font-size: 20px; height: calc(100vh - 200px);">
+      <!-- Chat content will go here -->
     </div>
     <script>
       const chatSocket = new WebSocket("ws://" + window.location.host + "/");
@@ -115,8 +142,13 @@
         }
       });
 
+      // Call this after new content is added
+      function scrollToBottom() {
+        const chatContainer = document.getElementById("id_chat_item_container");
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
     
-
+      
       chatSocket.onmessage = function (e) {
         const data = JSON.parse(e.data);
         const messageType = data.message_type;
@@ -147,6 +179,7 @@
           div.appendChild(video);
           console.log(div)
           document.querySelector("#id_chat_item_container").appendChild(div);
+          scrollToBottom();
         }
         else {
           console.log("massage : " + message);
@@ -154,6 +187,7 @@
           div.innerHTML = data.username + " : " + data.message;
           document.querySelector("#id_message_send_input").value = "";
           document.querySelector("#id_chat_item_container").appendChild(div);
+          scrollToBottom();
         }
       };
     </script>
