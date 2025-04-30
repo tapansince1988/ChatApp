@@ -12,5 +12,5 @@ urlpatterns = [
     path("auth/logout/", LogoutView.as_view(), name="logout-user"),
 
     # video upload
-    path("upload-video/", VideoUploadView.as_view(), name="upload-video"),
+    path("upload_video/", VideoUploadView.as_view(), name="upload_video"),
 ]

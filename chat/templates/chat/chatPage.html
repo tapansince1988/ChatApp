@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Chat Page</title>
+  </head>
   <body>
     <center><h1>Hello , Welcome to my chat site ! {{request.user}}</h1></center>
     <br>
@@ -20,10 +24,31 @@
       <input type="text" id="id_message_send_input" />
       <button type="submit" id="id_message_send_button">Send Message</button>
       <br />
+      Want to share a video ? Click on the button.
+      <input type="file" id="videoInput" accept="video/*" style="display: none;">
+      <button id="shareVideoBtn">Share Video</button>
+      <br />
+      <br />
       <br />
     </div>
     <script>
       const chatSocket = new WebSocket("ws://" + window.location.host + "/");
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+      }
+    
       chatSocket.onopen = function (e) {
         console.log("The connection was setup successfully !");
         {% comment %} chatSocket.send(JSON.stringify({ message: 'Hi, I have logged in.', username : "{{request.user.username}}"})); {% endcomment %}
@@ -48,18 +73,74 @@
         chatSocket.send(JSON.stringify({ message: 'I am leaving now', username : "{{request.user.username}}"}));
       }; {% endcomment %}
 
+      // Handle button click to trigger hidden file input
+      document.getElementById('shareVideoBtn').addEventListener('click', function () {
+        document.getElementById('videoInput').click();
+      });
+
+      // Handle file selection and upload
+      document.getElementById('videoInput').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append('video', file);
+
+            fetch('/upload_video/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')  // Make sure this function is defined
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.video_url) {
+                    // Send the video URL via WebSocket
+                    chatSocket.send(JSON.stringify({
+                        'message': data.video_url,
+                        'type': 'video',
+                        'username' : "{{request.user.username}}"
+                    }));
+                } else {
+                    alert("Upload failed.");
+                }
+            })
+            .catch(error => {
+                console.error('Error uploading video:', error);
+                alert("Error uploading video.");
+            });
+        }
+      });
+
+    
+
       chatSocket.onmessage = function (e) {
         const data = JSON.parse(e.data);
         const messageType = data.message_type;
         const message = data.message;
 
         if (messageType === 'video') {
-            const videoElement = document.createElement('video');
-            videoElement.src = message;
-            videoElement.controls = true;
-            document.getElementById('chat-log').appendChild(videoElement);
+          console.log(data);
+          var div = document.createElement("div");
+          var videoElement = document.createElement('video');
+          videoElement.setAttribute("width", "320");
+          videoElement.setAttribute("height", "240");
+          videoElement.setAttribute('controls', 'controls');
+
+          var sourceElement = document.createElement('source');
+          sourceElement.setAttribute('src', message);
+
+          videoElement.appendChild(sourceElement);
+          div.appendChild(videoElement);
+
+          {% comment %} videoElement.src = message;
+          videoElement.controls = true; {% endcomment %}
+          console.log(div)
+          {% comment %} document.getElementById('chat-log').appendChild(videoElement); {% endcomment %}
+          document.querySelector("#id_chat_item_container").appendChild(div);
         } 
         else {
+          console.log("massage : " + message);
           var div = document.createElement("div");
           div.innerHTML = data.username + " : " + data.message;
           document.querySelector("#id_message_send_input").value = "";
