@@ -15,5 +15,5 @@ class VideoUploadView(View):
         video_file = request.FILES.get('video')
         if video_file:
             path = default_storage.save(f'videos/{video_file.name}', ContentFile(video_file.read()))
-            return JsonResponse({'video_url': default_storage.url(path)})
+            return JsonResponse({'video_url': default_storage.url(path), 'username': request.user.username})
         return JsonResponse({'error': 'No video uploaded'}, status=400)
