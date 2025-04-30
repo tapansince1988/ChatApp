@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
+    {% load static %}
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <title>Chat Page</title>
   </head>
@@ -101,6 +103,7 @@
                         'type': 'video',
                         'username' : "{{request.user.username}}"
                     }));
+                    document.getElementById('videoInput').value = '';
                 } else {
                     alert("Upload failed.");
                 }
@@ -118,27 +121,33 @@
         const data = JSON.parse(e.data);
         const messageType = data.message_type;
         const message = data.message;
-
         if (messageType === 'video') {
           console.log(data);
           var div = document.createElement("div");
-          var videoElement = document.createElement('video');
-          videoElement.setAttribute("width", "320");
-          videoElement.setAttribute("height", "240");
-          videoElement.setAttribute('controls', 'controls');
 
-          var sourceElement = document.createElement('source');
-          sourceElement.setAttribute('src', message);
+          // Create <video> element
+          const video = document.createElement('video');
+          video.setAttribute('controls', '');
+          video.setAttribute('width', '640');
+          video.setAttribute('height', '640');
+          video.style.display = 'block'; 
 
-          videoElement.appendChild(sourceElement);
-          div.appendChild(videoElement);
+          // Create <source> element
+          const source = document.createElement('source');
+          source.setAttribute('src', message);
+          source.setAttribute('type', 'video/mp4');
+          source.style.display = 'block'; 
 
-          {% comment %} videoElement.src = message;
-          videoElement.controls = true; {% endcomment %}
+          // Append <source> to <video>
+          video.appendChild(source);
+
+          // Add fallback text
+          video.appendChild(document.createTextNode('Your browser does not support the video tag.'));
+
+          div.appendChild(video);
           console.log(div)
-          {% comment %} document.getElementById('chat-log').appendChild(videoElement); {% endcomment %}
           document.querySelector("#id_chat_item_container").appendChild(div);
-        } 
+        }
         else {
           console.log("massage : " + message);
           var div = document.createElement("div");
