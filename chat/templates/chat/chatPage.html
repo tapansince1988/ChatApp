@@ -50,10 +50,21 @@
 
       chatSocket.onmessage = function (e) {
         const data = JSON.parse(e.data);
-        var div = document.createElement("div");
-        div.innerHTML = data.username + " : " + data.message;
-        document.querySelector("#id_message_send_input").value = "";
-        document.querySelector("#id_chat_item_container").appendChild(div);
+        const messageType = data.message_type;
+        const message = data.message;
+
+        if (messageType === 'video') {
+            const videoElement = document.createElement('video');
+            videoElement.src = message;
+            videoElement.controls = true;
+            document.getElementById('chat-log').appendChild(videoElement);
+        } 
+        else {
+          var div = document.createElement("div");
+          div.innerHTML = data.username + " : " + data.message;
+          document.querySelector("#id_message_send_input").value = "";
+          document.querySelector("#id_chat_item_container").appendChild(div);
+        }
       };
     </script>
   </body>
